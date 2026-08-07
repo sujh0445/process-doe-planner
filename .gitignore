@@ -1,0 +1,60 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+.DS_Store
+.coverage
+htmlcov/
+coverage.xml
+.env
+.env.*
+!.env.example
+.omx/
+
+# Generated reports, plots, and local experiment outputs
+outputs/
+
+# Raw lecture/practice media can contain private or licensed material.
+# Keep only reviewed, redistributable examples in examples/ and docs/.
+assets/
+private_data/
+data/
+experiments/
+inbox/
+simulator/
+requirements-image-analysis.txt
+
+# Keep local research notes and one-off data conversion utilities out of the
+# public repository. The allowlists below are the reviewed public surfaces.
+/docs/*
+!/docs/README.md
+!/docs/ai_doe_planning_agent_design.md
+!/docs/allowed-factor-space-to-doe-generator.md
+!/docs/artifact-logging-and-feedback-loop.md
+!/docs/doe-decision-algorithm.md
+!/docs/doe-evidence-report-format.md
+!/docs/evidence-and-unknown-context-risk.md
+!/docs/four-process-doe-summary.md
+!/docs/next-doe-recommendation-logic.md
+!/docs/process-knowledge-card-template.md
+!/docs/process-knowledge-schema.md
+!/docs/project-specific-decision-criteria.md
+!/docs/recommendation-confidence-grading.md
+!/docs/report-automation-plan.md
+!/docs/scoring-engine.md
+!/docs/spc-control-chart-risk-doe-integration.md
+!/docs/statistics_ml_interpretation_guidelines.md
+!/docs/structured-request-schema.md
+!/docs/validation-risk-gate-contract.md
+!/docs/x-candidate-scoring.md
+!/docs/knowledge/
+!/docs/knowledge/*.md
+
+/scripts/*
+!/scripts/run_mvp_smoke.py
+!/scripts/check_public_release.py

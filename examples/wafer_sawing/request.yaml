@@ -1,0 +1,103 @@
+project:
+  name: "Wafer sawing feed productivity MVP"
+  process_area: "wafer_sawing"
+  equipment: "DISCO DAD 3241"
+  recipe_family: "8-inch silicon wafer sawing"
+
+objective:
+  primary_goal: "Increase feed speed while keeping chipping risk acceptable."
+  business_goal: "Reduce cutting time."
+  decision_mode: "quality-first productivity improvement"
+
+responses:
+  - name: "Max chipping size"
+    column: "max_chipping_size_um"
+    type: "continuous"
+    unit: "um"
+    direction: "lower_is_better"
+    role: "primary_quality_y"
+    spec:
+      upper_spec: 12
+      warning_upper: 9
+      baseline_compare: true
+    measurement_method: "For each sampled chip edge, measure the largest chipping depth from the saw-line reference."
+
+factors:
+  - name: "Spindle RPM"
+    column: "spindle_rpm"
+    unit: "rpm"
+    current: 50000
+    practical_doe_range: [30000, 50000]
+    levels: [30000, 50000]
+    controllable: true
+    role: "quality_factor"
+    mechanism_note: "Higher RPM is expected to reduce chipping by lowering cutting load per abrasive interaction."
+  - name: "Feed speed"
+    column: "feed_speed_mm_s"
+    unit: "mm/s"
+    current: 50
+    practical_doe_range: [10, 200]
+    levels: [50, 150]
+    controllable: true
+    role: "productivity_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Higher feed speed improves throughput but can increase chipping risk."
+
+criteria:
+  - name: "Spec pass/fail"
+    criterion_id: "wafer_sawing_spec_gate"
+    applies_to_y: "Max chipping size"
+    decision_role: "quality_gate"
+    metric: "over-spec count and worst-case max"
+    pass_rule: "No sampled edge should exceed the upper spec."
+    next_doe_impact: "If any over-spec occurs, move to safer feed/RPM region."
+  - name: "Tail risk"
+    criterion_id: "wafer_sawing_tail_risk"
+    applies_to_y: "Max chipping size"
+    decision_role: "risk_guardrail"
+    metric: "max and p95 by condition"
+    pass_rule: "Warning-zone measurements should be reviewed before aggressive productivity improvement."
+    next_doe_impact: "If p95 or max rises sharply, confirm locally rather than increasing feed."
+  - name: "Productivity trade-off"
+    criterion_id: "wafer_sawing_productivity"
+    decision_role: "production_objective"
+    metric: "feed speed after quality gate"
+    pass_rule: "Higher feed is valuable only after chipping risk passes."
+    next_doe_impact: "If high feed passes, refine or confirm the feed window."
+  - name: "Mechanism consistency"
+    criterion_id: "wafer_sawing_mechanism_consistency"
+    decision_role: "mechanism_consistency"
+    metric: "effect direction versus sawing mechanism"
+    pass_rule: "RPM and feed effects should be interpreted against expected cutting-load and productivity mechanisms."
+    next_doe_impact: "If the statistical effect conflicts with mechanism expectations, add confirmation before committing to a narrower window."
+  - name: "Measurement confidence"
+    criterion_id: "wafer_sawing_measurement_confidence"
+    decision_role: "measurement_confidence"
+    metric: "sample count, tail observation, manual high-scope reliability"
+    pass_rule: "Candidate conditions should be confirmed when sample count is small or worst-case risk drives the decision."
+    next_doe_impact: "Use confirmation DOE or additional samples before final release when the selected condition is close to the guardrail."
+
+baseline_condition:
+  spindle_rpm: 50000
+  feed_speed_mm_s: 50
+
+mechanism_hypotheses:
+  - "Higher RPM should reduce chipping risk."
+  - "Higher feed speed should improve productivity but may increase chipping and tail risk."
+  - "Production benefit is considered only after the quality gate is passed."
+  - "The first screening DOE may use a narrower low/high contrast, then follow-up DOE can test boundary levels such as feed 10 or 200 mm/s when the evidence calls for it."
+
+constraints:
+  analysis_stage: "screening"
+  design_type: "full_factorial"
+  max_runs: 4
+  samples_per_condition: 10
+  decision_basis: "condition_level_project_criteria"
+  include_pooled_diagnostics: false
+  capability_min_n: 33
+  measurement_bottleneck: "Manual high-scope chipping measurement"
+  initial_screening_levels:
+    spindle_rpm: [30000, 50000]
+    feed_speed_mm_s: [50, 150]
+  followup_exploration_levels:
+    feed_speed_mm_s: [10, 200]

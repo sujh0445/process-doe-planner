@@ -1,0 +1,145 @@
+project:
+  name: "Transfer molding DOE starter"
+  process_area: "transfer_molding"
+  equipment: "Manual press transfer molding equipment"
+  recipe_family: "lead-frame or substrate-frame transfer molding"
+
+objective:
+  primary_goal: "Control wire sweep and molding defect risk."
+  business_goal: "Reduce injection/cycle time only after molding quality is acceptable."
+  decision_mode: "flow-mechanism quality gate then cycle-time trade-off"
+
+responses:
+  - name: "Wire sweep ratio"
+    column: "wire_sweep_percent"
+    type: "continuous"
+    unit: "%"
+    direction: "lower_is_better"
+    role: "primary_quality_y"
+    spec:
+      upper_spec: 5
+      warning_upper: 3
+      baseline_compare: true
+    measurement_method: "Measure lateral wire displacement after molding and normalize by original wire span or agreed reference length."
+
+  - name: "Sagging count"
+    column: "sagging_count"
+    type: "count"
+    unit: "count"
+    direction: "lower_is_better"
+    role: "guardrail_y"
+    spec:
+      upper_spec: 0
+    measurement_method: "Count visible loop sagging or pre/post-mold loop-collapse cases separately from lateral wire sweep."
+
+  - name: "Void count"
+    column: "void_count"
+    type: "count"
+    unit: "count"
+    direction: "lower_is_better"
+    role: "guardrail_y"
+    spec:
+      upper_spec: 0
+    measurement_method: "Count visible or X-ray-confirmed voids only if the inspection method is available and repeatable."
+
+  - name: "Injection time"
+    column: "injection_time_s"
+    type: "continuous"
+    unit: "sec"
+    direction: "lower_is_better"
+    role: "production_y"
+    measurement_method: "Record equipment injection time or calculate from the fixed recipe table."
+
+factors:
+  - name: "Mold temperature"
+    column: "mold_temperature_c"
+    unit: "degC"
+    current: 175
+    practical_doe_range: [165, 185]
+    levels: [170, 185]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Mold temperature affects EMC viscosity, flowability, cure behavior, and void/fill risk."
+
+  - name: "Transfer pressure"
+    column: "transfer_pressure_ton"
+    unit: "ton"
+    current: 1.0
+    practical_doe_range: [0.8, 1.8]
+    levels: [0.8, 1.4]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Transfer pressure helps cavity fill and packing, but excessive pressure can increase wire sweep or flash risk."
+
+  - name: "Transfer down slow"
+    column: "transfer_down_slow_mm_s"
+    unit: "mm/s"
+    current: 0.8
+    practical_doe_range: [0.2, 1.2]
+    levels: [0.5, 1.1]
+    controllable: true
+    role: "productivity_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Higher transfer down slow setting reduces injection time but can create more aggressive flow around wires."
+
+  - name: "Wire loop height"
+    column: "wire_loop_height_um"
+    unit: "um"
+    current: 220
+    practical_doe_range: [180, 260]
+    levels: [190, 240]
+    controllable: true
+    role: "guardrail_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "Loop height is an upstream stress factor for sweep/sagging sensitivity and should be treated carefully if it is not freely controllable."
+
+criteria:
+  - name: "Wire sweep spec pass/fail"
+    criterion_id: "wire_sweep_gate"
+    applies_to_y: "Wire sweep ratio"
+    decision_role: "quality_gate"
+    metric: "upper-spec pass, p95, worst sample, and margin"
+    pass_rule: "Wire sweep should remain below the approved upper spec."
+    next_doe_impact: "If sweep fails, reduce flow aggressiveness or review loop-height sensitivity before cycle-time optimization."
+
+  - name: "Sagging separation guardrail"
+    criterion_id: "sagging_guardrail"
+    applies_to_y: "Sagging count"
+    decision_role: "guardrail"
+    metric: "sagging event count"
+    pass_rule: "Sagging should be treated separately from sweep and should not be hidden inside average sweep."
+    next_doe_impact: "If sagging appears, hold molding-flow interpretation and check upstream wire loop or handling."
+
+  - name: "Void guardrail"
+    criterion_id: "void_guardrail"
+    applies_to_y: "Void count"
+    decision_role: "guardrail"
+    metric: "void count or visible defect count"
+    pass_rule: "Void count should remain zero or within the approved visual/X-ray rule."
+    next_doe_impact: "If voids appear, review temperature, pressure, transfer speed, venting, and material condition."
+
+  - name: "Injection-time trade-off"
+    criterion_id: "injection_time_tradeoff"
+    applies_to_y: "Injection time"
+    decision_role: "production_tradeoff"
+    metric: "time reduction among quality-pass candidates"
+    pass_rule: "Injection time can be improved only when sweep, sagging, and void guardrails pass."
+    next_doe_impact: "If quality margin exists, refine transfer down slow upward or compare top quality-pass candidates."
+
+baseline_condition:
+  mold_temperature_c: 175
+  transfer_pressure_ton: 1.0
+  transfer_down_slow_mm_s: 0.8
+  wire_loop_height_um: 220
+
+mechanism_hypotheses:
+  - "Transfer molding is a flow-control problem: temperature, pressure, and transfer speed jointly affect fill, sweep, void, and cycle time."
+  - "Faster transfer improves injection time but can increase wire sweep or void risk."
+  - "Sagging and lateral sweep are different failure modes and should be measured or flagged separately."
+
+constraints:
+  max_runs: 8
+  samples_per_condition: 3
+  measurement_bottleneck: "Wire sweep and sagging inspection after molding."

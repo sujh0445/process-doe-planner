@@ -1,0 +1,130 @@
+project:
+  name: "Wire bonding 2nd bond DOE starter"
+  process_area: "wire_bonding_2nd_bond"
+  equipment: "Thermosonic wire bonder"
+  recipe_family: "2nd bond / stitch bond recipe"
+
+objective:
+  primary_goal: "Satisfy pull force while avoiding risky pull failure codes."
+  business_goal: "Find a robust 2nd-bond recipe without disturbing the fixed 1st-bond condition."
+  decision_mode: "force spec plus failure-mode guardrail"
+
+responses:
+  - name: "Pull force"
+    column: "pull_force_g"
+    type: "continuous"
+    unit: "g"
+    direction: "higher_is_better"
+    role: "primary_quality_y"
+    spec:
+      lower_spec: 7
+      warning_lower: 8
+    measurement_method: "Use the fixed pull-test setup and record peak force for each sample."
+
+  - name: "Pull failure code"
+    column: "pull_failure_code"
+    type: "categorical"
+    unit: "code"
+    direction: "lower_is_better"
+    role: "guardrail_y"
+    pass_values: [1, 2, 3]
+    fail_values: [4, 5, 6, 7]
+    warning_values: [3]
+    measurement_method: "Classify break position after pull test; codes 1-3 are acceptable if pull force passes, while 4-7 require engineering review."
+
+  - name: "Ball shear force"
+    column: "ball_shear_g"
+    type: "continuous"
+    unit: "g"
+    direction: "higher_is_better"
+    role: "guardrail_y"
+    spec:
+      lower_spec: 20
+      warning_lower: 22
+    measurement_method: "Use ball shear only as a 1st-bond guardrail during a 2nd-bond DOE."
+
+factors:
+  - name: "2nd US Power"
+    column: "second_us_power"
+    unit: "equipment_unit"
+    current: 300
+    practical_doe_range: [150, 450]
+    levels: [150, 450]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "US power changes ultrasonic energy dose and strongly affects stitch bond formation and possible over-energy damage."
+
+  - name: "2nd Bond Force"
+    column: "second_bond_force_gf"
+    unit: "gf"
+    current: 60
+    practical_doe_range: [20, 100]
+    levels: [20, 100]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Bond force changes contact/deformation and can improve pull force or create metal-lift/cratering risk if excessive."
+
+  - name: "2nd US Time"
+    column: "second_us_time_ms"
+    unit: "ms"
+    current: 15
+    practical_doe_range: [3, 20]
+    levels: [3, 20]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "US time changes energy exposure duration and can interact with US power."
+
+  - name: "2nd Force Time"
+    column: "second_force_time_ms"
+    unit: "ms"
+    current: 5
+    practical_doe_range: [3, 10]
+    levels: [3, 10]
+    controllable: true
+    role: "throughput_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "Force time changes contact hold stability and cycle time."
+
+criteria:
+  - name: "Pull force lower-bound pass"
+    criterion_id: "pull_force_gate"
+    applies_to_y: "Pull force"
+    decision_role: "quality_gate"
+    metric: "lower-spec margin, minimum value, and pass count"
+    pass_rule: "Every confirmed candidate should keep pull force above 7 g."
+    next_doe_impact: "If pull force is weak, increase safe energy/contact dose before production optimization."
+
+  - name: "Failure-code guardrail"
+    criterion_id: "failure_code_guardrail"
+    applies_to_y: "Pull failure code"
+    decision_role: "guardrail"
+    metric: "count of codes 4-7 and concentration of warning code 3"
+    pass_rule: "Codes 4-7 are not confirmed-baseline conditions even if force passes; they remain risky unless reviewed."
+    next_doe_impact: "If risky codes appear, shift next DOE toward mechanism stabilization rather than average-force maximization."
+
+  - name: "1st-bond ball shear guardrail"
+    criterion_id: "ball_shear_guardrail"
+    applies_to_y: "Ball shear force"
+    decision_role: "guardrail"
+    metric: "lower-spec margin and abnormal case check"
+    pass_rule: "Ball shear should remain above the guardrail spec so 2nd-bond conclusions are not confounded by 1st-bond drift."
+    next_doe_impact: "If ball shear fails, hold 2nd-bond interpretation and verify the 1st-bond condition."
+
+baseline_condition:
+  second_us_power: 300
+  second_bond_force_gf: 60
+  second_us_time_ms: 15
+  second_force_time_ms: 5
+
+mechanism_hypotheses:
+  - "US power and US time form an energy-dose interaction that should be reviewed before fixing either one."
+  - "Bond force and force time form a contact-hold interaction that can improve pull force but may increase failure-code risk."
+  - "Pull force must be interpreted together with failure code; average force alone is not enough."
+
+constraints:
+  max_runs: 8
+  samples_per_condition: 3
+  measurement_bottleneck: "Pull-test repeatability and failure-code classification."

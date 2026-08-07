@@ -1,0 +1,88 @@
+project:
+  name: "Wafer sawing DOE starter"
+  process_area: "wafer_sawing"
+  equipment: "DISCO DAD 3241"
+  recipe_family: "8-inch silicon wafer blade sawing"
+
+objective:
+  primary_goal: "Find a sawing condition that controls observed local max chipping."
+  business_goal: "Increase feed speed after chipping risk is acceptable."
+  decision_mode: "quality-first productivity improvement"
+
+responses:
+  - name: "Observed local max chipping size"
+    column: "max_chipping_size_um"
+    type: "continuous"
+    unit: "um"
+    direction: "lower_is_better"
+    role: "primary_quality_y"
+    spec:
+      upper_spec: 12
+      warning_upper: 9
+      baseline_compare: true
+    measurement_method: "Measure the y-direction gap from the saw-line boundary reference to the deepest recessed local chipping point on the sampled chip edge."
+
+  - name: "Cutting time"
+    column: "cutting_time_s"
+    type: "continuous"
+    unit: "sec"
+    direction: "lower_is_better"
+    role: "production_y"
+    measurement_method: "Record or calculate cutting time consistently from feed speed and cut length."
+
+factors:
+  - name: "Spindle RPM"
+    column: "spindle_rpm"
+    unit: "rpm"
+    current: 50000
+    practical_doe_range: [30000, 50000]
+    levels: [30000, 50000]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Higher RPM is expected to reduce cutting load per abrasive interaction and reduce chipping, but it should be checked for tool and process stability."
+
+  - name: "Feed speed"
+    column: "feed_speed_mm_s"
+    unit: "mm/s"
+    current: 50
+    practical_doe_range: [50, 200]
+    levels: [50, 150]
+    controllable: true
+    role: "productivity_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Higher feed speed improves productivity but may increase mechanical load, vibration, and chipping."
+
+criteria:
+  - name: "Chipping spec pass/fail"
+    criterion_id: "chipping_spec_gate"
+    applies_to_y: "Observed local max chipping size"
+    decision_role: "quality_gate"
+    metric: "over-spec count, p95, worst observed local max, and upper-spec margin"
+    pass_rule: "No sampled chip edge should exceed the hard upper spec."
+    next_doe_impact: "If any over-spec occurs, reduce feed speed or move to a safer RPM/feed region."
+
+  - name: "Feed productivity trade-off"
+    criterion_id: "feed_productivity_tradeoff"
+    applies_to_y: "Cutting time"
+    decision_role: "production_tradeoff"
+    metric: "feed speed increase or cutting time reduction among chipping-pass conditions"
+    pass_rule: "Use productivity only as a tiebreaker after the chipping gate passes."
+    next_doe_impact: "If quality margin remains, refine feed speed upward with confirmation sampling."
+
+baseline_condition:
+  spindle_rpm: 50000
+  feed_speed_mm_s: 50
+
+mechanism_hypotheses:
+  - "Increasing feed speed should improve productivity but can increase chipping by raising cutting load."
+  - "Increasing spindle RPM should generally reduce chipping, but measured effects may be small compared with feed speed or measurement variation."
+  - "Observed local max chipping is a limited-sampling risk indicator, not a full-wafer true maximum."
+
+constraints:
+  max_runs: 4
+  samples_per_condition: 10
+  decision_basis: "condition_level_project_criteria"
+  include_pooled_diagnostics: false
+  capability_min_n: 33
+  measurement_bottleneck: "Manual high-scope chipping measurement."

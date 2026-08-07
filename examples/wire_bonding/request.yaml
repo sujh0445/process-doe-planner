@@ -1,0 +1,96 @@
+project:
+  name: "Second-stitch wire bonding mixed-Y example"
+  process_area: "wire_bonding_2nd"
+  equipment: "training wire bonder"
+  recipe_family: "second-stitch bond"
+
+objective:
+  primary_goal: "Increase pull-force margin while avoiding risky fracture modes."
+  business_goal: "Find a robust second-bond condition before cycle-time optimization."
+  decision_mode: "quality-first mixed-response screening"
+
+responses:
+  - name: "Pull force"
+    column: "pull_force_g"
+    type: "continuous"
+    unit: "g"
+    direction: "higher_is_better"
+    role: "primary_quality_y"
+    spec:
+      lower_spec: 7
+      warning_lower: 8
+    measurement_method: "Measure peak pull force and retain each replicate as an individual observation."
+  - name: "Failure code"
+    column: "failure_code"
+    type: "categorical"
+    direction: "lower_is_better"
+    role: "secondary_quality_y"
+    pass_values: ["code1", "code2", "code3"]
+    warning_values: ["code4"]
+    fail_values: ["code5", "code6", "code7"]
+    measurement_method: "Record the fracture-mode code from the same pull-test specimen."
+
+factors:
+  - name: "2nd US power"
+    column: "us_power"
+    unit: "machine_unit"
+    current: 300
+    practical_doe_range: [150, 450]
+    levels: [150, 450]
+    controllable: true
+    role: "quality_factor"
+    mechanism_note: "Higher ultrasonic power is expected to improve stitch bonding within the approved process window."
+  - name: "2nd bond force"
+    column: "bond_force_gf"
+    unit: "gf"
+    current: 60
+    practical_doe_range: [20, 100]
+    levels: [20, 100]
+    controllable: true
+    role: "quality_factor"
+    mechanism_note: "Within the approved DOE range, higher bond force is expected to improve second-stitch contact."
+
+criteria:
+  - name: "Pull-force lower-spec gate"
+    criterion_id: "wire_bonding_pull_gate"
+    applies_to_y: "Pull force"
+    decision_role: "quality_gate"
+    metric: "under-spec count, minimum, and p05"
+    pass_rule: "No pull-force measurement should fall below 7 g."
+    next_doe_impact: "Move toward the factor region that raises the lower tail when under-spec results occur."
+  - name: "Failure-mode guardrail"
+    criterion_id: "wire_bonding_failure_mode"
+    applies_to_y: "Failure code"
+    decision_role: "risk_guardrail"
+    metric: "risky-code count and rate"
+    pass_rule: "Codes 5-7 reject a condition; code 4 requires confirmation."
+    next_doe_impact: "Do not accept a high average pull force when risky failure modes remain."
+  - name: "Mechanism consistency"
+    criterion_id: "wire_bonding_mechanism"
+    decision_role: "mechanism_consistency"
+    metric: "effect direction versus second-bond energy/contact mechanism"
+    pass_rule: "Observed factor directions should be physically plausible or locally confirmed."
+    next_doe_impact: "Conflicting directions trigger a confirmation DOE before narrowing the window."
+  - name: "Measurement confidence"
+    criterion_id: "wire_bonding_measurement"
+    decision_role: "measurement_confidence"
+    metric: "replicate count and pull-test repeatability"
+    pass_rule: "Use matched pull-force and failure-code records for every replicate."
+    next_doe_impact: "Repeat candidates when the lower tail or code distribution is unstable."
+
+baseline_condition:
+  us_power: 150
+  bond_force_gf: 20
+
+mechanism_hypotheses:
+  - "Ultrasonic power and bond force jointly determine second-stitch bond formation."
+  - "Pull force and fracture mode must be interpreted together because a high force alone does not remove interface-risk evidence."
+
+constraints:
+  analysis_stage: "screening"
+  design_type: "full_factorial"
+  max_runs: 4
+  samples_per_condition: 3
+  decision_basis: "condition_level_project_criteria"
+  capability_min_n: 33
+  measurement_bottleneck: "Manual pull-test handling and fracture-mode classification"

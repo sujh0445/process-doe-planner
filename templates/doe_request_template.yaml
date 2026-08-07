@@ -1,0 +1,88 @@
+project:
+  name: "New DOE project"
+  process_area: "process_area_name"
+  equipment: "equipment_name"
+  recipe_family: "recipe_or_product_family"
+
+objective:
+  primary_goal: "State the quality or process problem to improve."
+  business_goal: "State the production, time, cost, or yield reason."
+  decision_mode: "criteria-first DOE recommendation"
+
+responses:
+  - name: "Primary quality response"
+    column: "primary_y"
+    type: "continuous"
+    unit: "unit"
+    direction: "lower_is_better"
+    role: "primary_quality_y"
+    spec:
+      lower_spec:
+      upper_spec: 10
+      warning_upper: 8
+      baseline_compare: true
+    measurement_method: "Describe exactly how one measured value is produced."
+
+  - name: "Production monitor"
+    column: "production_y"
+    type: "continuous"
+    unit: "sec"
+    direction: "lower_is_better"
+    role: "production_y"
+    measurement_method: "Record the same way for every DOE condition."
+
+factors:
+  - name: "Factor A"
+    column: "factor_a"
+    unit: "unit"
+    current: 0
+    practical_doe_range: [0, 100]
+    levels: [20, 80]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Explain why this factor should affect the primary Y."
+
+  - name: "Factor B"
+    column: "factor_b"
+    unit: "unit"
+    current: 0
+    practical_doe_range: [0, 100]
+    levels: [20, 80]
+    controllable: true
+    role: "productivity_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Explain the expected quality-production trade-off."
+
+criteria:
+  - name: "Spec pass/fail"
+    criterion_id: "spec_gate"
+    applies_to_y: "Primary quality response"
+    decision_role: "quality_gate"
+    metric: "over-spec count, worst-case value, and margin"
+    pass_rule: "No measured sample should violate the hard spec."
+    next_doe_impact: "If this fails, move to a safer quality region before production optimization."
+
+  - name: "Production trade-off"
+    criterion_id: "production_tradeoff"
+    applies_to_y: "Production monitor"
+    decision_role: "production_tradeoff"
+    metric: "production improvement among quality-pass candidates"
+    pass_rule: "Production improvement is considered only after quality gates pass."
+    next_doe_impact: "If quality margin exists, refine the production factor or compare top candidates."
+
+baseline_condition:
+  factor_a: 20
+  factor_b: 20
+
+mechanism_hypotheses:
+  - "The primary quality response should change in the expected direction when Factor A changes."
+  - "The production factor should not be pushed aggressively until the primary quality response has enough margin."
+
+constraints:
+  max_runs: 8
+  samples_per_condition: 3
+  decision_basis: "condition_level_project_criteria"
+  include_pooled_diagnostics: false
+  capability_min_n: 33
+  measurement_bottleneck: "Describe the slowest or least reliable measurement step."

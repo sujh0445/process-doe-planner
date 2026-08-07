@@ -1,0 +1,129 @@
+project:
+  name: "Epoxy die attach DOE starter"
+  process_area: "die_attach"
+  equipment: "SPA-300 style die bonder"
+  recipe_family: "epoxy paste die attach"
+
+objective:
+  primary_goal: "Satisfy bond line thickness and die shear quality."
+  business_goal: "After quality pass, reduce epoxy usage or cycle time cautiously."
+  decision_mode: "multi-Y quality gate then production improvement"
+
+responses:
+  - name: "Bond line thickness"
+    column: "bond_line_thickness_um"
+    type: "continuous"
+    unit: "um"
+    direction: "lower_is_better"
+    role: "primary_quality_y"
+    spec:
+      lower_spec: 35
+      upper_spec: 55
+      warning_upper: 50
+      baseline_compare: true
+    measurement_method: "Measure final cured bond line thickness using the agreed cross-section, microscope, or thickness method."
+
+  - name: "Die shear strength"
+    column: "die_shear_mpa"
+    type: "continuous"
+    unit: "MPa"
+    direction: "higher_is_better"
+    role: "primary_quality_y"
+    spec:
+      lower_spec: 22
+      warning_lower: 25
+    measurement_method: "Measure die shear strength after the fixed cure condition."
+
+  - name: "Process time"
+    column: "process_time_s"
+    type: "continuous"
+    unit: "sec"
+    direction: "lower_is_better"
+    role: "production_y"
+    measurement_method: "Record the recipe-controlled process time for each condition."
+
+factors:
+  - name: "Epoxy dispense amount"
+    column: "epoxy_amount_mg_equivalent"
+    unit: "mg-equivalent"
+    current: 1.05
+    practical_doe_range: [0.75, 1.35]
+    levels: [0.95, 1.2]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "Epoxy amount affects coverage, BLT, void risk, bleed risk, and material usage."
+
+  - name: "Bond force"
+    column: "bond_force_gf"
+    unit: "gf"
+    current: 600
+    practical_doe_range: [300, 700]
+    levels: [500, 700]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "higher_is_better"
+    mechanism_note: "Bond force affects contact, squeeze-out, BLT, and possible damage risk."
+
+  - name: "Bond time"
+    column: "bond_time_ms"
+    unit: "ms"
+    current: 500
+    practical_doe_range: [300, 800]
+    levels: [300, 800]
+    controllable: true
+    role: "quality_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "Bond time can improve wetting/contact but increases cycle time and may saturate."
+
+  - name: "Wait time"
+    column: "wait_time_s"
+    unit: "sec"
+    current: 3
+    practical_doe_range: [3, 8]
+    levels: [3, 8]
+    controllable: true
+    role: "throughput_factor"
+    production_direction: "lower_is_better"
+    mechanism_note: "Wait/wetting time may affect wetting or void, but should not be increased without quality evidence."
+
+criteria:
+  - name: "BLT spec pass/fail"
+    criterion_id: "blt_spec_gate"
+    applies_to_y: "Bond line thickness"
+    decision_role: "quality_gate"
+    metric: "lower/upper spec pass, p95, p05, and margin"
+    pass_rule: "BLT must remain inside the approved spec window."
+    next_doe_impact: "If BLT fails, adjust epoxy amount and bond force before production optimization."
+
+  - name: "Die shear lower-bound pass"
+    criterion_id: "die_shear_gate"
+    applies_to_y: "Die shear strength"
+    decision_role: "quality_gate"
+    metric: "lower-spec margin, worst sample, and repeat stability"
+    pass_rule: "Die shear must exceed the lower spec with adequate margin."
+    next_doe_impact: "If shear is weak, do not reduce epoxy or time aggressively."
+
+  - name: "Cycle-time trade-off"
+    criterion_id: "cycle_time_tradeoff"
+    applies_to_y: "Process time"
+    decision_role: "production_tradeoff"
+    metric: "time reduction among quality-pass candidates"
+    pass_rule: "Cycle time is optimized only among BLT and shear pass candidates."
+    next_doe_impact: "If quality margin exists, refine wait time or bond time cautiously."
+
+baseline_condition:
+  epoxy_amount_mg_equivalent: 1.05
+  bond_force_gf: 600
+  bond_time_ms: 500
+  wait_time_s: 3
+
+mechanism_hypotheses:
+  - "Epoxy amount and bond force jointly determine BLT, spread, and shear, so the A x B interaction should be protected or reviewed."
+  - "Within BLT spec, thinner BLT is preferred only if die shear and guardrails remain healthy."
+  - "Epoxy and time reductions are production improvements, not primary goals before quality pass."
+
+constraints:
+  max_runs: 8
+  samples_per_condition: 3
+  measurement_bottleneck: "BLT and die shear measurements after fixed cure."
