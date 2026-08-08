@@ -1,8 +1,12 @@
-# AI DOE Planner
+# Process DOE Planner
 
-AI DOE Planner is a criteria-first command-line engine for designing,
+Process DOE Planner is a criteria-first, process-aware command-line engine for designing,
 interpreting, and continuing DOE (Design of Experiments) workflows in process
 optimization projects.
+
+The current name reflects the implemented product: a deterministic DOE planning
+engine. The **AI DOE Planner** name is reserved for a future version that adds
+an LLM-based agent layer with tool calling and workflow orchestration.
 
 > Status: executable alpha for portfolio and engineering review. The CLI
 > generates candidate DOE plans and evidence reports; it does not authorize
@@ -93,14 +97,14 @@ The first programmatic MVP is now implemented as a command-line engine.
 ### Quick Start
 
 ```bash
-git clone <repository-url>
-cd ai-doe-planner
+git clone https://github.com/sujh0445/process-doe-planner.git
+cd process-doe-planner
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 
-ai-doe validate --request examples/wafer_sawing/request.yaml
-ai-doe report \
+doe-planner validate --request examples/wafer_sawing/request.yaml
+doe-planner report \
   --request examples/wafer_sawing/request.yaml \
   --data examples/wafer_sawing/results.csv \
   --out outputs/demo/report.md \
@@ -109,9 +113,9 @@ ai-doe report \
   --plots-out outputs/demo/plots
 ```
 
-Replace `<repository-url>` with the GitHub URL after the repository is
-published. Generated reports and plots are written under `outputs/`, which is
-intentionally excluded from version control.
+The legacy `ai-doe` command remains available as a compatibility alias.
+Generated reports and plots are written under `outputs/`, which is intentionally
+excluded from version control.
 
 It converts:
 
@@ -166,32 +170,32 @@ defensible alternatives so an engineer can choose based on project priority.
 Current runnable example:
 
 ```bash
-cd ai-doe-planner
+cd process-doe-planner
 python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 
-.venv/bin/ai-doe validate \
+.venv/bin/doe-planner validate \
   --request examples/wafer_sawing/request.yaml
 
-.venv/bin/ai-doe design \
+.venv/bin/doe-planner design \
   --request examples/wafer_sawing/request.yaml \
   --explain \
   --out outputs/mvp/wafer_sawing_design.csv
 
-.venv/bin/ai-doe analyze \
+.venv/bin/doe-planner analyze \
   --request examples/wafer_sawing/request.yaml \
   --data examples/wafer_sawing/results.csv \
   --out outputs/mvp/wafer_sawing_report.md \
   --next-doe-out outputs/mvp/wafer_sawing_next_doe.csv \
   --plots-out outputs/mvp/plots
 
-.venv/bin/ai-doe recommend \
+.venv/bin/doe-planner recommend \
   --request examples/wafer_sawing/request.yaml \
   --data examples/wafer_sawing/results.csv \
   --primary-out outputs/mvp/wafer_sawing_next_doe.csv \
   --out-dir outputs/mvp/recommendation_options
 
-.venv/bin/ai-doe report \
+.venv/bin/doe-planner report \
   --request examples/wafer_sawing/request.yaml \
   --data examples/wafer_sawing/results.csv \
   --out outputs/mvp/wafer_sawing_report.md \
@@ -204,7 +208,7 @@ Generalization example with a lower-spec continuous response and a categorical
 failure-code guardrail:
 
 ```bash
-.venv/bin/ai-doe report \
+.venv/bin/doe-planner report \
   --request examples/wire_bonding/request.yaml \
   --data examples/wire_bonding/results.csv \
   --out outputs/wire_bonding/report.md \
@@ -220,7 +224,7 @@ instead of reusing the wafer-sawing upper-tail policy.
 Development mode without installing the package:
 
 ```bash
-cd ai-doe-planner
+cd process-doe-planner
 
 PYTHONPATH=src .venv/bin/python -m ai_doe_planner validate \
   --request examples/wafer_sawing/request.yaml
@@ -255,7 +259,7 @@ PYTHONPATH=src .venv/bin/python -m ai_doe_planner report \
 No-test-dependency smoke check:
 
 ```bash
-cd ai-doe-planner
+cd process-doe-planner
 PYTHONPATH=src .venv/bin/python scripts/run_mvp_smoke.py
 ```
 
@@ -274,11 +278,11 @@ conditions. The `design` command now uses `constraints.max_runs` as a practical
 run-budget signal: if a full factorial design fits, it emits full factorial; if
 a 4- or 5-factor two-level design exceeds the run budget but a half-fraction
 fits, it emits a fractional screening table with an alias-structure note.
-Use `ai-doe design --explain` to print the selected design type, rejected
+Use `doe-planner design --explain` to print the selected design type, rejected
 alternative, run-budget rationale, and alias warnings alongside the generated
 table. The `validate` command runs the same validation/risk gate before design
 or analysis. `PASS` generates normally, `BLOCK` stops DOE generation, and `HOLD`
-requires `ai-doe design --allow-hold` when the user intentionally wants a
+requires `doe-planner design --allow-hold` when the user intentionally wants a
 review-marked draft despite missing review items.
 
 Generated outputs:
@@ -369,11 +373,11 @@ The MVP direction is now split into two layers:
 
 ## Engine Architecture
 
-AI DOE Planner should be built as a general DOE planning engine plus
+Process DOE Planner should be built as a general DOE planning engine plus
 context-specific profiles.
 
 ```text
-AI DOE Planner Core
+Process DOE Planner Core
 -> Y role definition
 -> X candidate scoring
 -> DOE purpose selection

@@ -3,7 +3,7 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ai-doe-planner"
+name = "process-doe-planner"
 version = "0.1.0"
 description = "Criteria-first DOE analysis and next-experiment recommendation engine for process optimization."
 readme = "README.md"
@@ -46,6 +46,7 @@ dev = [
 ]
 
 [project.scripts]
+doe-planner = "ai_doe_planner.cli:main"
 ai-doe = "ai_doe_planner.cli:main"
 
 [tool.setuptools.packages.find]

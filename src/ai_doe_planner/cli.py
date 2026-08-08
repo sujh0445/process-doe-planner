@@ -199,7 +199,7 @@ def _design(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="ai-doe", description="AI DOE Planner MVP CLI")
+    parser = argparse.ArgumentParser(prog="doe-planner", description="Process DOE Planner MVP CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     validate = subparsers.add_parser("validate", help="Validate a DOE request and optional data before analysis/design.")
