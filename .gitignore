@@ -54,6 +54,8 @@ requirements-image-analysis.txt
 !/docs/x-candidate-scoring.md
 !/docs/knowledge/
 !/docs/knowledge/*.md
+!/docs/demo/
+!/docs/demo/**
 
 /scripts/*
 !/scripts/run_mvp_smoke.py

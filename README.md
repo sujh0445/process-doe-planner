@@ -24,6 +24,42 @@ Structured request + experiment data
 -> ranked next-DOE options + evidence report
 ```
 
+## See It in 60 Seconds
+
+**Problem:** A small DOE dataset can show statistical differences without
+answering the engineering question: which condition is acceptable, what risk
+remains, and what experiment should be run next?
+
+**Input:** A structured project request plus measured experiment results.
+
+| Input | Example |
+| --- | --- |
+| Project context | wafer sawing, DISCO DAD 3241, quality-first productivity improvement |
+| Factors (`X`) | spindle RPM and feed speed, with screening and practical follow-up ranges |
+| Response (`Y`) | max chipping size, continuous and lower-is-better, USL 12 um |
+| Engineering evidence | expected RPM/feed mechanisms, sampling plan, production objective |
+| Measurements | repeated chipping measurements for each DOE condition |
+
+**Output:** The CLI produces a reproducible evidence report, plots, and several
+next-DOE choices. In the included demo it rejects `30,000 rpm / 150 mm/s`
+because one measurement exceeds the specification, identifies feed speed as
+the larger modeled effect, keeps residual/error visible in ANOVA, and offers
+three follow-up paths: productivity refinement, best-condition confirmation,
+and candidate-contrast confirmation.
+
+- [Open the generated sample report](docs/demo/wafer_sawing/report.md)
+- [Open the primary next-DOE table](docs/demo/wafer_sawing/next_doe.csv)
+- [Inspect all generated demo artifacts](docs/demo/wafer_sawing/)
+
+![Wafer-sawing condition summary](docs/demo/wafer_sawing/plots/max-chipping-size-condition-summary.png)
+
+**Difference from generic statistical analysis:** statistics are evidence, not
+the final decision rule. The planner regenerates its criteria and analysis
+policy from the project objective, `Y` type, specification direction, DOE
+stage, design structure, process mechanism, measurement confidence, and
+production trade-off. It then exposes alternative next experiments instead of
+presenting one opaque "optimal" answer.
+
 ## Analysis Policy
 
 The same analysis recipe is not applied to every project. The engine builds an

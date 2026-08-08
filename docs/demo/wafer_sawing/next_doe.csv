@@ -1,0 +1,4 @@
+run,spindle_rpm,feed_speed_mm_s
+1,50000,50
+2,50000,55
+3,50000,200

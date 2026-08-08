@@ -1,0 +1,4 @@
+run,purpose,decision_state,quality_score,production_score,spindle_rpm,feed_speed_mm_s
+1,candidate_contrast,candidate,94.0,0.0,50000,50
+2,candidate_contrast,candidate,82.0,0.0,30000,50
+3,candidate_contrast,borderline,76.5,100.0,50000,150
